@@ -48,7 +48,7 @@ class VerifyAccount(object):
 
     def verify(self):
         s = socket.socket()
-        s.settimeout(1)
+        s.settimeout(self._timeout)
         try:
             s.connect(self._server)
             s.send(json.dumps({
@@ -57,6 +57,7 @@ class VerifyAccount(object):
                 "pwd": self.passkey
             }))
             rec = s.recv(self._buffer)
+            s.close()
             rec = json.loads(rec)
             if rec['success']:
                 self._validate()
@@ -70,6 +71,40 @@ class VerifyAccount(object):
             return False
         self._code = 3
         return False
+
+
+class Transaction(object):
+    """ Lets us talk to the server
+    """
+    def __init__(self,
+                 timeout=1,
+                 retries=0,
+                 server=("server.bloocoin.org", 3122)):
+        self._timeout = timeout
+        # Not actually used. -- TODO
+        self._retries = retries
+        self._server = server
+        self._code = 0
+
+    def send(cmd, payload, buffer=1024):
+        data_in = dict(cmd=cmd, **payload)
+        s = socket.socket()
+        s.settimeout(self._timeout)
+        try:
+            s.connect(self._server)
+            s.send(json.dumps(data_in))
+            rec = s.recv(buffer)
+            s.close()
+            data_out = json.loads(rec)
+            return data_out
+        except socket.error as e:
+            self._code = 1
+            return None
+        except ValueError as e:
+            self._code = 2
+            return None
+        self._code = 3
+        return None
 
 
 @app.route("/")
