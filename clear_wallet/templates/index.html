@@ -2,6 +2,9 @@
 {% block head %}
 	{{ super() }}
 	<script type="text/javascript" src="{{ url_for('.static', filename='index.js') }}"></script>
+    <script>
+    window.clear_wallet.addr = "{{ addr }}";
+    </script>
 {% endblock %}
 {% block title %}home{% endblock %}
 {% block content %}

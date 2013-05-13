@@ -6,15 +6,27 @@
     .sh {
         width: 40px;
     }
+    #margin-top-buttons {
+        display: inline-block;
+        margin-top: 5px;
+    }
     </style>
 {% endblock %}
 {% block title %}login{% endblock %}
 {% block content %}
-<form method="POST" action="">
-    {{ form.hidden_tag() }}
-    {#{{ form.address.label }}#}{{ form.address() }}<br>
-    {#{{ form.passkey.label }}#}{{ form.passkey() }}<br>
-    <input type="submit" class="button sh" value="login">
-    <input type="reset" class="button red sh" value="reset">
-</form>
+<p>
+    You can find these details in your <b>bloostamp</b> file.<br>
+    <i>address</i> is the first part, <i>passkey</i> is the second (as separated by colons).<br>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <b>{{ form.address.label }}</b><br>
+        {{ form.address(size=40) }}<br>
+        <b>{{ form.passkey.label }}</b><br>
+        {{ form.passkey(size=40) }}<br>
+        <span id="margin-top-buttons">
+            <input type="submit" class="button sh" value="login">
+            <input type="reset" class="button red sh" value="reset">
+        </span>
+    </form>
+</p>
 {% endblock %}

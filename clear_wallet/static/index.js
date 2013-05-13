@@ -21,12 +21,12 @@ function refresh_captcha() {
 	);
 }
 
-window.clear_wallet = {}
+window.clear_wallet = window.clear_wallet.addr || {};
 window.clear_wallet.last_id = 0;
 window.clear_wallet.last_err = 0;
 
 $(document).ready(function() {
 	$(".my-addr").click(function () {
-		prompt("Here is your address: (Ctrl-C to copy)", $(this).attr('title'));
+		prompt("Here is your address: (Ctrl-C to copy)", window.clear_wallet.addr);
 	});
 });
