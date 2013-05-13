@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('.static', filename='index.js') }}"></script>
+    <style>
+    .sh {
+        width: 40px;
+    }
+    </style>
+{% endblock %}
+{% block title %}login{% endblock %}
+{% block content %}
+<h1 class="header">login, kind sir!</h1>
+<form method="POST" action="">
+    {{ form.hidden_tag() }}
+    {#{{ form.address.label }}#}{{ form.address() }}<br>
+    {#{{ form.passkey.label }}#}{{ form.passkey() }}<br>
+    <input type="submit" class="button sh" value="login">
+    <input type="reset" class="button red sh" value="reset">
+</form>
+{% endblock %}
