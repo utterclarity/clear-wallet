@@ -44,10 +44,11 @@ class VerifyAccount(object):
             Length is the main thing to check.
         """
         # some_tests(self.address, self.passkey)
+        pass
 
     def verify(self):
         s = socket.socket()
-        s.settimeout(2)
+        s.settimeout(1)
         try:
             s.connect(self._server)
             s.send(json.dumps({
@@ -70,17 +71,20 @@ class VerifyAccount(object):
         self._code = 3
         return False
 
+
 @app.route("/")
 def index():
     if "logged_in" not in session:
         return redirect(url_for("login"))
     return render_template("index.html", addr=session['address'])
 
+
 @app.route("/logout")
 def logout():
-    session.pop("logged_in", None)
+    session.clear()
     flash("You were logged out.", "info")
     return redirect(url_for("index"))
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
