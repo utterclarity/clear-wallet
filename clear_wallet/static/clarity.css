@@ -16,6 +16,7 @@
 
 .header {
     color: #2BA6CB;
+    display: inline-block;
 }
 
 .close-btn {
@@ -23,7 +24,7 @@
 }
 
 hr {
-    border: 1px dashed #000;
+    /*border: 1px dashed #000;*/
 }
 
 .button {

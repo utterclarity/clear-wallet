@@ -5,5 +5,8 @@
 {% endblock %}
 {% block title %}home{% endblock %}
 {% block content %}
-<h1 class="header">clear wallet</h1>
+<span id="main-links">
+    <a href="{{ url_for('logout')}}">(logout)</a> &ndash;
+    (<span title="{{ addr }}" class="my-addr">{{ "<b>"|safe ~ addr[:10] ~ "</b>"|safe ~ "..." }}</span>)
+</span>
 {% endblock %}
