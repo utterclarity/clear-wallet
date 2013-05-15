@@ -6,7 +6,7 @@ import socket
 from flask import Flask, render_template, request, g, session
 from flask import url_for, redirect, flash, jsonify
 from flask.ext.wtf import Form
-from wtforms import TextField, PasswordField
+from wtforms import TextField, PasswordField, IntegerField
 
 app = Flask(__name__)
 app.debug = "--debug" in sys.argv
@@ -20,6 +20,11 @@ with open('config.json', 'rb') as f:
 class LoginForm(Form):
     address = TextField("Address")
     passkey = PasswordField("Passkey")
+
+
+class SendForm(Form):
+    address = TextField("Address of receiver")
+    amount = IntegerField("Amount")
 
 
 class VerifyAccount(object):
@@ -152,12 +157,42 @@ def data_json():
     return jsonify(gather_data())
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
     if "logged_in" not in session or session['logged_in'] is not True:
         return redirect(url_for("login"))
     data = gather_data()
-    return render_template("index.html", addr=session['address'])
+    send_blc = SendForm()
+    if send_blc.validate_on_submit():
+        with Transaction("send_coin") as t:
+            d = t({
+                "to": send_blc.address.data,
+                "addr": session['address'],
+                "pwd": session['passkey'],
+                "amount": send_blc.amount.data
+            })
+            if d is not None and d['success'] is True:
+                flash(
+                    "Successfully sent {0} {1} BLC!".format(
+                        d['payload']['to'],
+                        d['payload']['amount']
+                    ),
+                    "success"
+                )
+            else:
+                if d is not None:
+                    flash(
+                        "Failed! Server says: {0}".format(d['message']),
+                        "error"
+                    )
+                else:
+                    flash("Unable to contact server!", "error")
+        return redirect(url_for('index'))
+    return render_template(
+        "index.html",
+        addr=session['address'],
+        send_blc=send_blc
+    )
 
 
 @app.route("/logout")

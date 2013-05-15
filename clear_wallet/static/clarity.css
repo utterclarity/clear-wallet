@@ -272,6 +272,7 @@ a.no_hover:link, a.no_hover:hover, a.no_hover:visited, a.no_hover:active {
     margin: 0 auto;
     padding: 0;
     width: 100%;
+    z-index: 1001;
 }
 
 .flash {

@@ -5,8 +5,18 @@
     <link rel="stylesheet" href="{{ url_for('.static', filename='spinner.css') }}"/>
 	<script type="text/javascript" src="{{ url_for('.static', filename='index.js') }}"></script>
     <script>
+    window.clear_wallet.is_main_page = true;
     window.clear_wallet.addr = "{{ addr }}";
     </script>
+    <style>
+    .sh {
+        width: 40px;
+    }
+    #margin-top-buttons {
+        display: inline-block;
+        margin-top: 5px;
+    }
+    </style>
 {% endblock %}
 
 {% block title %}home{% endblock %}
@@ -59,6 +69,22 @@
                 </td>
             </tr>
         </table>
+    </p>
+</div>
+<div id="block-send">
+    <h2>Send BLC</h2>
+    <p>
+        <form action="" method="POST">
+            {{ send_blc.hidden_tag() }}
+            <h3>{{ send_blc.address.label() }}</h3>
+            {{ send_blc.address(size=35) }}
+            <h3>{{ send_blc.amount.label() }}</h3>
+            {{ send_blc.amount(size=5) }}<br>
+            <span id="margin-top-buttons">
+                <input type="submit" class="button green sh" value="send">
+                <input type="reset" class="button red sh" value="reset">
+            </span>
+        </form>
     </p>
 </div>
 <div id="block-transactions">
