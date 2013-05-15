@@ -62,6 +62,9 @@ $(document).ready(function() {
 	if (!window.clear_wallet.is_main_page) {
 		return;
 	}
+	$('#download-stamp').click(function () {
+		window.location = "/bloostamp/get";
+	});
     $('#retry-query').click(function () {
         $(this).slideUp();
         pull_data();
@@ -70,5 +73,6 @@ $(document).ready(function() {
     	pull_data();
     });
     $(".my-addr").click(my_addr_hook);
+
     pull_data();
 });

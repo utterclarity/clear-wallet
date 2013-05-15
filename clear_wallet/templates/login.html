@@ -4,13 +4,41 @@
     <script type="text/javascript" src="{{ url_for('.static', filename='index.js') }}"></script>
     <style>
     .sh {
-        width: 40px;
+        width: 60px;
+        height: 25px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .sq {
+        width: 25px;
+        height: 25px;
     }
     #margin-top-buttons {
         display: inline-block;
         margin-top: 5px;
     }
     </style>
+    <script>
+    $(document).ready(function () {
+        $('#upload-stamp').click(function () {
+            //$.post('/bloostamp/up')
+            return false;
+        });
+        $('#generate-stamp').click(function () {
+            $('#spinner').slideDown();
+            $(this).attr('disabled', 'disabled');
+            $.post('/bloostamp/generate', function (data) {
+                if (data.success) {
+                    window.location = data.url;
+                }
+            }).fail(function () {
+                alert("Crap!");
+                $(this).removeAttr('disabled');
+            });
+            return false;
+        });
+    });
+    </script>
 {% endblock %}
 
 {% block title %}login{% endblock %}
@@ -18,7 +46,7 @@
 {% block content %}
 <p>
     You can find these details in your <span title="This is the wallet file your client/miner will generate for you"><b>bloostamp</b></span> file.<br>
-    <i>address</i> is the first part, <i>passkey</i> is the second (as separated by colons).<br>
+    Alternatively, you can <b>upload</b> your bloostamp (<b>N/A</b>), or <b>generate</b> a new one!
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <b>{{ form.address.label }}</b><br>
@@ -26,8 +54,9 @@
         <b>{{ form.passkey.label }}</b><br>
         {{ form.passkey(size=35) }}<br>
         <span id="margin-top-buttons">
-            <input type="submit" class="button sh" value="login">
-            <input type="reset" class="button red sh" value="reset">
+            <input type="submit" class="button red sh" value="login">
+            <!--<button id="upload-stamp" class="button red sq"><i class="icon-upload-alt icon-large"></i></button>-->
+            <button id="generate-stamp" class="button red sq"><i class="icon-plus-sign icon-large"></i></button>
         </span>
     </form>
 </p>

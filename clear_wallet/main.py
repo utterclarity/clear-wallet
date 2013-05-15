@@ -4,7 +4,8 @@ import json
 import socket
 
 from flask import Flask, render_template, request, g, session
-from flask import url_for, redirect, flash, jsonify
+from flask import url_for, redirect, flash, jsonify, abort
+from flask import Response, stream_with_context
 from flask.ext.wtf import Form
 from wtforms import TextField, PasswordField, IntegerField
 
@@ -148,6 +149,67 @@ def gather_data():
         if d is not None and d['success'] is True:
             data['transactions'] = d['payload']
     return data
+
+
+def register_new_address():
+    import uuid
+    import hashlib
+    addr, pwd = "", ""
+    while True:
+        addr = hashlib.sha1(str(uuid.uuid4())).hexdigest()
+        pwd = hashlib.sha1(str(uuid.uuid4())).hexdigest()
+        print addr, pwd, "hallo"
+        with Transaction("register") as t:
+            d = t({
+                "addr": addr,
+                "pwd": pwd,
+            })
+            if d is not None and d['success'] is True:
+                break
+            if t._code != 0:
+                return False, False
+    return (addr, pwd)
+
+
+@app.route("/bloostamp/get")
+def bloostamp_get():
+    if "logged_in" not in session or session['logged_in'] is not True:
+        abort(403)
+    def generator():
+        yield "{0}:{1}:{2}".format(
+            session['address'],
+            session['passkey'],
+            "CW"
+        )
+    return Response(
+        stream_with_context(generator()),
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": "attachment;filename=bloostamp"
+        })
+
+
+@app.route("/bloostamp/up", methods=["POST"])
+def bloostamp_up():
+    abort(403)
+
+
+@app.route("/bloostamp/generate", methods=["POST"])
+def bloostamp_generate():
+    if "logged_in" in session:
+        return jsonify({"success": False, "url": ""})
+    addr, pwd = register_new_address()
+    print addr, pwd, "halp"
+    if addr is False and pwd is False:
+        return jsonify({"success": False, "url": ""})
+    session['logged_in'] = True
+    session['address'] = addr
+    session['passkey'] = pwd
+    flash("Successfully generated a new BlooCoin address!", "success")
+    return jsonify({
+        "success": True,
+        "url": url_for('index')
+    })
 
 
 @app.route("/data.json")

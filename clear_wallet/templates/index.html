@@ -2,7 +2,6 @@
 
 {% block head %}
 	{{ super() }}
-    <link rel="stylesheet" href="{{ url_for('.static', filename='spinner.css') }}"/>
 	<script type="text/javascript" src="{{ url_for('.static', filename='index.js') }}"></script>
     <script>
     window.clear_wallet.is_main_page = true;
@@ -23,23 +22,17 @@
 
 {% block header %}
     <span title="{{ addr }} - click to copy" class="my-addr">{{ "<b>"|safe ~ addr[:10] ~ "</b>"|safe ~ "..." }}</span>
-    <span title="Polling server for data" id="spinner">
-        <div id="circularG">
-            <div id="circularG_1" class="circularG"></div>
-            <div id="circularG_2" class="circularG"></div>
-            <div id="circularG_3" class="circularG"></div>
-            <div id="circularG_4" class="circularG"></div>
-            <div id="circularG_5" class="circularG"></div>
-            <div id="circularG_6" class="circularG"></div>
-            <div id="circularG_7" class="circularG"></div>
-            <div id="circularG_8" class="circularG"></div>
-        </div>
-    </span>
     <span title="Retry server query" id="retry-query">
         <button class="button red">RETRY</button>
     </span>
     <span title="Refresh data" id="refresh-query">
         <button class="button cyan">REFRESH</button>
+    </span>
+{% endblock %}
+
+{% block rheader %}
+    <span title="Download your bloostamp" id="download-stamp">
+        <i class="icon-download-alt"></i>
     </span>
 {% endblock %}
 

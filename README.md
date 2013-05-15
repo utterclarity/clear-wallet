@@ -24,3 +24,10 @@ Make the contents something like this:
 ```
 
 Get a good secret key via `os.urandom(24)` in Python, then C/P the results above.
+
+TODO
+----
+
++ Add uploading of wallet file to log in.
++ Generate new wallet file and log in. __Done!__
++ Download wallet file. __Done!__
