@@ -32,7 +32,7 @@
                     window.location = data.url;
                 }
             }).fail(function () {
-                alert("Crap!");
+                $('#spinner').slideUp();
                 $(this).removeAttr('disabled');
             });
             return false;
