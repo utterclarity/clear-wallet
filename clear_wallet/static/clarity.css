@@ -22,15 +22,11 @@ div[id^="block-"] h2:after {
     display: none;
 }
 
-#spinner:hover {
-    background: none;
-}
-
 #retry-query {
     display: none;
 }
 
-#retry-query:hover {
+#spinner:hover, #retry-query:hover, #refresh-query:hover {
     background: none;
 }
 

@@ -65,6 +65,9 @@ $(document).ready(function() {
         $(this).slideUp();
         pull_data();
     });
+    $('#refresh-query').click(function () {
+    	pull_data();
+    });
     $(".my-addr").click(my_addr_hook);
     pull_data();
 });
