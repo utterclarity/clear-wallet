@@ -19,10 +19,18 @@ div[id^="block-"] h2:after {
     /*display: inline-block;*/
     padding: 5px;
     float: right;
-    /*display: none;*/
+    display: none;
 }
 
 #spinner:hover {
+    background: none;
+}
+
+#retry-query {
+    display: none;
+}
+
+#retry-query:hover {
     background: none;
 }
 

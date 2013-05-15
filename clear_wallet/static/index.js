@@ -4,7 +4,7 @@ function flash(msg, category) {
 	//<p class="flash flash-{{ category }} flash-num-{{ loop.index }}">{{ message }}</p>
 	$err = $('<p class="flash flash-' + category + ' flash-num-' + num + '">' + msg + '</p>');
 	$('#flashes').append($err);
-	setTimeout(function() {
+	setTimeout(function () {
 		$err.slideUp("slow", function() {
 			$err.remove();
 		});
@@ -14,6 +14,16 @@ function flash(msg, category) {
 function pull_data() {
 	$('#spinner').slideDown();
 	$.get('/data.json', function (data) {
+		if (data == null || data.coins == null || data.transactions == null) {
+			flash(
+				"Something went wrong querying the server.<br>"
+				+ "Retry by pressing the red <b>RETRY</b> button.",
+				"error"
+			);
+			$('#spinner').slideUp();
+			$('#retry-query').slideDown();
+			return;
+		}
 		$('#block-address .my-addr').text(data.coins.addr);
 		$('#block-address .my-coins').text(data.coins.amount);
 		for (var i = data.transactions.transactions.length - 1; i >= 0; i--) {
@@ -47,6 +57,10 @@ function my_addr_hook() {
 }
 
 $(document).ready(function() {
+	$('#retry-query').click(function () {
+		$(this).slideUp();
+		pull_data();
+	});
 	$(".my-addr").click(my_addr_hook);
 	pull_data();
 });
