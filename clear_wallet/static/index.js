@@ -26,6 +26,7 @@ function pull_data() {
         }
         $('#block-address .my-addr').text(data.coins.addr);
         $('#block-address .my-coins').text(data.coins.amount);
+        $('#block-transactions-body').empty();
         for (var i = data.transactions.transactions.length - 1; i >= 0; i--) {
             var d = data.transactions.transactions[i];
             var $tr = $('<tr/>');
