@@ -47,10 +47,6 @@ function my_addr_hook() {
 }
 
 $(document).ready(function() {
-	$("#test-spinner").click(function () {
-		$('#spinner').slideDown();
-		setTimeout(function () {$('#spinner').slideUp();}, 2000);
-	});
 	$(".my-addr").click(my_addr_hook);
 	pull_data();
 });
