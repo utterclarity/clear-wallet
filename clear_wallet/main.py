@@ -32,7 +32,7 @@ class VerifyAccount(object):
     def __init__(self,
                  address,
                  passkey,
-                 timeout=1,
+                 timeout=2,
                  retries=0,
                  server=("server.bloocoin.org", 3122)):
         self.address = address
@@ -84,7 +84,7 @@ class Transaction(object):
     """
     def __init__(self,
                  command,
-                 timeout=1,
+                 timeout=2,
                  retries=0,
                  server=("server.bloocoin.org", 3122)):
         self.command = command
