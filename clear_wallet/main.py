@@ -4,7 +4,7 @@ import json
 import socket
 
 from flask import Flask, render_template, request, g, session
-from flask import url_for, redirect, flash
+from flask import url_for, redirect, flash, jsonify
 from flask.ext.wtf import Form
 from wtforms import TextField, PasswordField
 
@@ -77,25 +77,42 @@ class Transaction(object):
     """ Lets us talk to the server
     """
     def __init__(self,
+                 command,
                  timeout=1,
                  retries=0,
                  server=("server.bloocoin.org", 3122)):
+        self.command = command
         self._timeout = timeout
         # Not actually used. -- TODO
         self._retries = retries
         self._server = server
         self._code = 0
 
-    def send(cmd, payload, buffer=1024):
-        data_in = dict(cmd=cmd, **payload)
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return
+
+    def __call__(self, payload, _buffer=1024, _looping=False):
+        data_in = dict(cmd=self.command, **payload)
         s = socket.socket()
         s.settimeout(self._timeout)
         try:
             s.connect(self._server)
             s.send(json.dumps(data_in))
-            rec = s.recv(buffer)
+            if _looping:
+                data = ""
+                while True:
+                    rec = s.recv(_buffer)
+                    if rec:
+                        data += rec
+                    else:
+                        break
+            else:
+                data = s.recv(_buffer)
             s.close()
-            data_out = json.loads(rec)
+            data_out = json.loads(data)
             return data_out
         except socket.error as e:
             self._code = 1
@@ -107,10 +124,39 @@ class Transaction(object):
         return None
 
 
+def gather_data():
+    data = {
+        "coins": None,
+        "transactions": None,
+    }
+    with Transaction("check_addr") as t:
+        d = t({
+            "addr": session['address']
+        })
+        if d is not None and d['success'] is True:
+            data['coins'] = d['payload']
+    with Transaction("transactions") as t:
+        d = t({
+            "addr": session['address'],
+            "pwd": session['passkey']
+        }, _looping=True)
+        if d is not None and d['success'] is True:
+            data['transactions'] = d['payload']
+    return data
+
+
+@app.route("/data.json")
+def data_json():
+    if "logged_in" not in session or session['logged_in'] is not True:
+        return jsonify({})
+    return jsonify(gather_data())
+
+
 @app.route("/")
 def index():
-    if "logged_in" not in session:
+    if "logged_in" not in session or session['logged_in'] is not True:
         return redirect(url_for("login"))
+    data = gather_data()
     return render_template("index.html", addr=session['address'])
 
 

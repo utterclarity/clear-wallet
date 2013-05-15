@@ -1,15 +1,80 @@
 {% extends "layout.html" %}
+
 {% block head %}
 	{{ super() }}
+    <link rel="stylesheet" href="{{ url_for('.static', filename='spinner.css') }}"/>
 	<script type="text/javascript" src="{{ url_for('.static', filename='index.js') }}"></script>
     <script>
     window.clear_wallet.addr = "{{ addr }}";
     </script>
 {% endblock %}
+
 {% block title %}home{% endblock %}
+
+{% block header %}
+    <span title="{{ addr }} - click to copy" class="my-addr">{{ "<b>"|safe ~ addr[:10] ~ "</b>"|safe ~ "..." }}</span>
+    <span title="Polling server for data" id="spinner">
+        <div id="circularG">
+            <div id="circularG_1" class="circularG"></div>
+            <div id="circularG_2" class="circularG"></div>
+            <div id="circularG_3" class="circularG"></div>
+            <div id="circularG_4" class="circularG"></div>
+            <div id="circularG_5" class="circularG"></div>
+            <div id="circularG_6" class="circularG"></div>
+            <div id="circularG_7" class="circularG"></div>
+            <div id="circularG_8" class="circularG"></div>
+        </div>
+    </span>
+    <span id="test-spinner">Test</span>
+{% endblock %}
+
 {% block content %}
-<span id="main-links">
-    <a href="{{ url_for('logout')}}">(logout)</a> &ndash;
-    (<span title="{{ addr }}" class="my-addr">{{ "<b>"|safe ~ addr[:10] ~ "</b>"|safe ~ "..." }}</span>)
-</span>
+<noscript>
+    <h1 style="color: #FF0000">clear wallet requires JavaScript to function! :(</h1>
+</noscript>
+<div id="block-address">
+    <h2>Address information</h2>
+    <p>
+        <table class="one-column-emphasis">
+            <tr>
+                <td>
+                    Address
+                </td>
+                <td>
+                    <b>
+                        <span title="{{ addr }} - click to copy" class="my-addr"></span>
+                    </b>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Coins
+                </td>
+                <td>
+                    <b>
+                        <span class="my-coins"></span>
+                    </b>
+                </td>
+            </tr>
+        </table>
+    </p>
+</div>
+<div id="block-transactions">
+    <h2>Transaction list</h2>
+    <p>
+        <table class="one-column-emphasis">
+            <thead>
+                <th scope="col">To</th>
+                <th scope="col">From</th>
+                <th scope="col">Amount</th>
+                <!--
+                    Incase the server ever supports this..
+                    <th scope="col">When</th>
+                -->
+            </thead>
+            <tbody id="block-transactions-body">
+            </tbody>
+        </table>
+    </p>
+</div>
 {% endblock %}

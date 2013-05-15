@@ -12,17 +12,19 @@
     }
     </style>
 {% endblock %}
+
 {% block title %}login{% endblock %}
+
 {% block content %}
 <p>
-    You can find these details in your <b>bloostamp</b> file.<br>
+    You can find these details in your <span title="This is the wallet file your client/miner will generate for you"><b>bloostamp</b></span> file.<br>
     <i>address</i> is the first part, <i>passkey</i> is the second (as separated by colons).<br>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <b>{{ form.address.label }}</b><br>
-        {{ form.address(size=40) }}<br>
+        {{ form.address(size=35) }}<br>
         <b>{{ form.passkey.label }}</b><br>
-        {{ form.passkey(size=40) }}<br>
+        {{ form.passkey(size=35) }}<br>
         <span id="margin-top-buttons">
             <input type="submit" class="button sh" value="login">
             <input type="reset" class="button red sh" value="reset">
