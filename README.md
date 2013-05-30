@@ -13,10 +13,9 @@ Requirements
 configuration
 -------------
 
-You have to make a file called `config.json` in the directory of `main.py`, which
-contains information for Flask's app settings. Namely the `SECRET_KEY`.
+First off, rename `config.json.sample` to `config.json`. This file contains information for Flask's app settings. Namely the `SECRET_KEY`.
 
-Make the contents something like this:
+The contents should look something like this:
 ```javascript
 {
     "SECRET_KEY": "__secret__"
