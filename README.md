@@ -3,12 +3,16 @@ clear-wallet
 
 An online wallet designed for simple interaction with BlooCoin.
 
+Running
+-------
+Wallet is best run via gunicorn:  
+`gunicorn -w 3 -k gevent -b :3124 -p ~/gunicorn-wallet.pid main:app`  
+It might be more beneficial to bind to a unix socket (`-b unix:/tmp/gunicorn.sock`), allowing somewhat better pass-through with nginx (explained later).
+
 Requirements
 ------------
-
-+ `flask`
-+ `wtforms`
-+ `flask-wtf` (for improved form security, yo)
+You can see the dependencies in the `requirements.txt` file. Install with `pip install -r requirements.txt`  
+You might need the `libevent-dev` module to compile gevent successfully.
 
 configuration
 -------------

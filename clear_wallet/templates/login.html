@@ -31,7 +31,7 @@
                 if (data.success) {
                     window.location = data.url;
                 }
-            }).fail(function () {
+            }).always(function () {
                 $('#spinner').slideUp();
                 $(this).removeAttr('disabled');
             });

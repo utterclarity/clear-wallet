@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
-import sys
-import json
-import socket
+import gevent.monkey
+gevent.monkey.patch_all()
 
-from flask import Flask, render_template, request, g, session
+import json
+
+from flask import Flask, render_template, session
 from flask import url_for, redirect, flash, jsonify, abort
 from flask import Response, stream_with_context
 from flask.ext.wtf import Form
 from wtforms import TextField, PasswordField, IntegerField
+import blcpy
+
 
 app = Flask(__name__)
-app.debug = "--debug" in sys.argv
 with open('config.json', 'rb') as f:
     config = json.load(f)
     app.config.update(**config)
-    # Specifically this causes shitloads of issues if it's not str()
     app.config['SECRET_KEY'] = str(config['SECRET_KEY'])
 
 
@@ -28,153 +29,46 @@ class SendForm(Form):
     amount = IntegerField("Amount")
 
 
-class VerifyAccount(object):
-    def __init__(self,
-                 address,
-                 passkey,
-                 timeout=2,
-                 retries=0,
-                 server=("server.bloocoin.org", 3122)):
-        self.address = address
-        self.passkey = passkey
-        self._timeout = timeout
-        # Not actually used. -- TODO
-        self._retries = retries
-        self._server = server
-        self._buffer = 1024  # non-negotiable, bugger off.
-        # Error codes, yo.
-        self._code = 0
-
-    def _validate(self):
-        """ Should test that address/pass are valid.
-            Length is the main thing to check.
-        """
-        # some_tests(self.address, self.passkey)
-        pass
-
-    def verify(self):
-        s = socket.socket()
-        s.settimeout(self._timeout)
-        try:
-            s.connect(self._server)
-            s.send(json.dumps({
-                "cmd": "my_coins",
-                "addr": self.address,
-                "pwd": self.passkey
-            }))
-            rec = s.recv(self._buffer)
-            s.close()
-            rec = json.loads(rec)
-            if rec['success']:
-                self._validate()
-                return True
-        except socket.error as e:
-            self._code = 1
-            return False
-        except ValueError as e:
-            # JSON decoding error, probably.
-            self._code = 2
-            return False
-        self._code = 3
-        return False
-
-
-class Transaction(object):
-    """ Lets us talk to the server
-    """
-    def __init__(self,
-                 command,
-                 timeout=2,
-                 retries=0,
-                 server=("server.bloocoin.org", 3122)):
-        self.command = command
-        self._timeout = timeout
-        # Not actually used. -- TODO
-        self._retries = retries
-        self._server = server
-        self._code = 0
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        return
-
-    def __call__(self, payload, _buffer=1024, _looping=False):
-        data_in = dict(cmd=self.command, **payload)
-        s = socket.socket()
-        s.settimeout(self._timeout)
-        try:
-            s.connect(self._server)
-            s.send(json.dumps(data_in))
-            if _looping:
-                data = ""
-                while True:
-                    rec = s.recv(_buffer)
-                    if rec:
-                        data += rec
-                    else:
-                        break
-            else:
-                data = s.recv(_buffer)
-            s.close()
-            data_out = json.loads(data)
-            return data_out
-        except socket.error as e:
-            self._code = 1
-            return None
-        except ValueError as e:
-            self._code = 2
-            return None
-        self._code = 3
-        return None
-
-
 def gather_data():
     data = {
         "coins": None,
         "transactions": None,
     }
-    with Transaction("check_addr") as t:
-        d = t({
-            "addr": session['address']
-        })
-        if d is not None and d['success'] is True:
-            data['coins'] = d['payload']
-    with Transaction("transactions") as t:
-        d = t({
-            "addr": session['address'],
-            "pwd": session['passkey']
-        }, _looping=True)
-        if d is not None and d['success'] is True:
-            data['transactions'] = d['payload']
+    q = blcpy.CheckAddr(addr=session['address'])
+    try:
+        data['coins'] = q()
+    except blcpy.BLCException:
+        pass
+    q = blcpy.Transactions(addr=session['address'], pwd=session['passkey'])
+    try:
+        data['transactions'] = q()
+    except blcpy.BLCException:
+        pass
     return data
 
 
-def register_new_address():
+def register_new_address(repeats=3):
     import uuid
     import hashlib
     addr, pwd = "", ""
-    while True:
+    for _ in xrange(repeats):
         addr = hashlib.sha1(str(uuid.uuid4())).hexdigest()
         pwd = hashlib.sha1(str(uuid.uuid4())).hexdigest()
-        print addr, pwd, "hallo"
-        with Transaction("register") as t:
-            d = t({
-                "addr": addr,
-                "pwd": pwd,
-            })
-            if d is not None and d['success'] is True:
-                break
-            if t._code != 0:
-                return False, False
-    return (addr, pwd)
+        q = blcpy.Register(addr=addr, pwd=pwd)
+        try:
+            # Unused return, throws exception on failure.
+            q()
+            return (addr, pwd)
+        except blcpy.BLCException:
+            continue
+    return (False, False)
 
 
 @app.route("/bloostamp/get")
 def bloostamp_get():
     if "logged_in" not in session or session['logged_in'] is not True:
         abort(403)
+
     def generator():
         yield "{0}:{1}:{2}".format(
             session['address'],
@@ -197,11 +91,10 @@ def bloostamp_up():
 @app.route("/bloostamp/generate", methods=["POST"])
 def bloostamp_generate():
     if "logged_in" in session:
-        return jsonify({"success": False, "url": ""})
+        return jsonify({"success": False, "url": "1"})
     addr, pwd = register_new_address()
-    print addr, pwd, "halp"
     if addr is False and pwd is False:
-        return jsonify({"success": False, "url": ""})
+        return jsonify({"success": False, "url": "2"})
     session['logged_in'] = True
     session['address'] = addr
     session['passkey'] = pwd
@@ -223,33 +116,23 @@ def data_json():
 def index():
     if "logged_in" not in session or session['logged_in'] is not True:
         return redirect(url_for("login"))
-    data = gather_data()
     send_blc = SendForm()
     if send_blc.validate_on_submit():
-        with Transaction("send_coin") as t:
-            d = t({
-                "to": send_blc.address.data,
-                "addr": session['address'],
-                "pwd": session['passkey'],
-                "amount": send_blc.amount.data
-            })
-            if d is not None and d['success'] is True:
-                flash(
-                    "Successfully sent {0} {1} BLC!".format(
-                        d['payload']['to'],
-                        d['payload']['amount']
-                    ),
-                    "success"
-                )
-            else:
-                if d is not None:
-                    flash(
-                        "Failed! Server says: {0}".format(d['message']),
-                        "error"
-                    )
-                else:
-                    flash("Unable to contact server!", "error")
-        return redirect(url_for('index'))
+        q = blcpy.SendCoin(**{
+            "to": send_blc.address.data,
+            "addr": session['address'],
+            "pwd": session['passkey'],
+            "amount": send_blc.amount.data
+        })
+        try:
+            d = q()
+            msg = "Successfully sent {0} {1} BLC!"
+            flash(msg.format(d['to'], d['amount']), "success")
+        except blcpy.CommandFailure:
+            msg = "Failed! Server says: {0}".format(q.data['message'])
+            flash(msg, "error")
+        except blcpy.BLCException:
+            flash("Something went wrong talking to the server!", "error")
     return render_template(
         "index.html",
         addr=session['address'],
@@ -270,22 +153,18 @@ def login():
     if form.validate_on_submit():
         address = form.address.data
         passkey = form.passkey.data
-        v = VerifyAccount(address, passkey)
-        if v.verify():
+        q = blcpy.MyCoins(addr=address, pwd=passkey)
+        try:
+            q()
             session['logged_in'] = True
             session['address'] = address
             session['passkey'] = passkey
-            # To stop hijacking - not without Flask-KVSessions tho
-            #session.regenerate()
-            flash("Successfully logged in for: {0}".format(address), "success")
+            flash("Successfully logged in as: {0}".format(address), "success")
             return redirect(url_for("index"))
-        else:
-            if v._code == 1:
-                flash("Unable to contact server!", "error")
-            elif v._code == 2:
-                flash("Error communicating with server!", "error")
-            elif v._code == 3:
-                flash("Misc. problem talking to server!", "error")
+        except blcpy.SocketException:
+            flash("Unable to contact server!", "error")
+        except blcpy.BLCException:
+            flash("Error communicating with server!", "error")
     return render_template("login.html", form=form)
 
 if __name__ == "__main__":
